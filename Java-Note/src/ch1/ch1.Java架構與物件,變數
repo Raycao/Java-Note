@@ -1,0 +1,168 @@
+Java之基礎組成元素為:類別程序(Class Procedure)即"物件(Object)"
+一個java檔案包含多個類別程序
+每一個類別程序即為一個原始物件，可能為空物件或功能物件
+
+而物件的"設計圖"叫做類別(Class)
+必須先有class，而後實作class，進而形成物件
+例如: class Clothes
+表示名為Clothes的類別
+
+實作類別則使用關鍵字new
+例如:new Clothes();
+如此便新建一個物件
+
+如果新建的物件需要名稱則可以以此宣告:
+Clothes c1;
+
+這叫宣告參考名稱（Reference name）、參考變數（Reference variable）。
+如果要將c1綁到新建的物件上，可以使用=指定
+以Java的術語來說，稱為將c1名稱參考（refer）至新建物件。
+例如：
+Clothes c1 = new Clothes();
+範例: field.java
+
+一個java檔中，能有多個類別，但是public類別只能有一個
+而檔名也需與public類別名稱相同
+範例: field.java
+
+建立物件時，如果有必經過的初始流程，例如域值的指定
+則可以使用建構式(Constructor)
+建構試是與類別名稱一樣的方法(method)
+範例: field2.java
+
+
+Java型態共分為兩種
+基本型態(Primitive type)
+類別型態(Class type),或稱為參考型態(Reference Type)
+
+當 = 用於基本型態，表示將值複製給變數
+當 == 用於基本型態，用來比較兩個變數儲存的值是否相同
+範例: type.java
+
+倘若用於類別型態，也就是使用在物件上時
+= 是用在指定參考名稱參考某個物件
+== 是用在比較兩個參考名稱是否參考同一物件
+範例: type2.java
+
+使用基本型態的目的在於效率
+而使用類別型態則可以帶有更多資訊
+要讓基本型態像物件一樣操作
+可以使用Long、Integer、Double、Float、Boolean、Byte等類別來包裹(Wrap)基本型態。 
+將基本型態包裹於物件中，便可以操作這個物件
+自動裝箱: Integer wrapper = 10;
+自動拆箱: int foo = wrapper;
+範例: Integer.java
+
+
+使用標準api
+api許多類別所組成，令設計師可以直接取用
+範例: guess.java
+
+
+使用陣列
+陣列基本上是用來收集資料，是具有索引（Index）的資料結構，索引由0開始
+範例: score.java
+
+若未知陣列內容，僅知陣列個數，可以使用new關鍵字指定長度來建立陣列
+例如建立長度為5的陣列: int[] scores = new int[5];
+以new建立後的物件，預設值是0或false
+範例: score2.java
+利用命令列引數進行輸入
+範例: Average.java
+
+二維陣列及非方陣二維陣列宣告
+範例:xy.java
+
+使用類別型態建立陣列
+例如: Integer[] scores = new Integer[3];
+**特別點在於使用基本型態來new矩陣，初始值會是0會false(如同前面所講過的)
+**而使用類別型態建立的物件，都會先指向null
+範例: IntegerArray.java
+
+陣列複製，陣列是物件，但如下的操作並非就是陣列複製
+int[] scores1 = {88, 81, 74, 68, 78, 76, 77, 85, 95, 93};
+int[] scores2 = scores1;
+這僅僅是將scores1參考的陣列物件，也給scores2參考。
+因此如果改變score1內的植，score2內的值也會改變
+
+而基本的陣列複製作法是new一個新的陣列
+再一個值一個值慢慢的指定過去，例如下:
+int[] scores1 = {88, 81, 74, 68, 78, 76, 77, 85, 95, 93};
+int[] scores2 = new int[scores1.length];
+for(int i = 0; i < scores1.length; i++) {
+    scores2[i] = scores1[i];
+}
+另外也可以使用api以提供的方法
+範例: CopyArray.java
+
+使用自訂類別型態生成的矩陣，要注意其參考狀況
+範例: ShallowCopy.java
+因為改變參考物件所以原本複製的陣列內容也一併改變
+這叫做複製參考，也可以稱作淺層複製(Shallow copy)
+所以正確的自定義類別型態矩陣物件的複製應該如此
+範例: DeepCopy.java
+做深層複製(Deep copy)
+
+接著我們談到字串
+字串是以字元陣列的方式存在，因此可以算是陣列
+例如"Hello"字串是由'H'、'e'、'l'、'l'、'o'五個字元組成
+Java中，字串是java.lang.String實例，用來包裹字元陣列
+若你已經擁有字元陣列，也可以用來建構成字串，反之也可
+另外java使用+，來進行串接字串
+範例: stringtest.java
+
+將使用者輸入的字串進行剖析，並相加
+範例: Sum.java
+
+Java必須注意的特性：
+    字串常量與字串池
+    不可變動（Immutable）字串
+
+字串常量與字串池:
+Java中為了效率考量，以""包括的字串，只要內容相同（序列、大小寫相同）
+無論在程式碼中出現幾次，JVM都只會建立一個String實例
+並在字串池（String pool）中維護。
+而new出來的字串，縱使內容相同，也不會是同一物件
+
+不可變動字串:
+字串物件一旦建立，就無法更動物件中任何內容
+使用+串接字串會產生新的String實例
+因此可以使用StringBuilder的方式，減少不斷生成新物件的問題
+比較的範例: OneToHundred.java
+
+另外有StringBuffer 
+在單機非多執行緒（Multithread）情況下，使用StringBuilder會有較好的效率
+因為StringBuilder不處理同步（Synchronized）問題
+StringBuffer則會處理同步問題，在多執行緒環境下建議改用StringBuffer
+讓物件自行管理同步問題。
+
+區塊(Block)
+使用{}來區分不同區塊，範例: block.java
+內部區塊會有生存問題，只有在執行時才存在
+因此a區塊執行時，b區塊並未存在，因為還未執行
+同理，a因為執行完畢因此已不復生存
+範例: block2.java
+
+如同剛剛所說的區塊間不會互相影響
+但這僅限於關係同等的區塊
+而內部區塊與外部區塊則會互相干擾
+內部不得存在與外部相同的變數名稱
+範例: block3.java
+
+生存變數
+如果程序內宣告之變數，無法直接使用
+範例: var.java
+正確使用方式，應該要先產生物件
+範例: var2.java
+
+
+非生存區塊所宣告的變數，無法使用
+範例: var3.java
+可以由以下兩個方式改善
+1. 將宣告移到生存區塊內，範例: var4.java
+2. 產生新物件，範例: var5.java
+
+類別變數
+在變數前加關鍵字 static
+可以使變數一直處於生存狀態，等待被執行
+範例: var6.java , var7.java
