@@ -1,0 +1,236 @@
+Java物件導向的幾個重點:
+封裝、繼承、多型
+
+封裝:
+程式中重複出現的流程，是可以改進的
+藉由定義建構式可以改善這個問題
+我們將重複流程包裹起來
+而這樣省去過多的程式碼，透過簡單的呼叫便可使用得方式
+我們稱為封裝(encapsulation)
+範例: CashCard.java + CardApp.java
+
+定義方法(method)來處理一些重複流程
+範例: CashCard2.java + CardApp2.java
+
+然而，因為部分的變數是沒有定義存取狀態的
+因此透過不同程式得撰寫，變數內容可能會遭到修改
+所以我們應該定義類別資料的存取
+可以使用private關鍵字進行定義
+這樣的方式稱為"封裝類別私有資料"
+範例: CashCard3.java
+
+
+類別語法細節
+預設建構式式無任何引數參數的
+若已有自行設定建構式，則不會在呼叫預設建構式
+
+而有不同需要時，也可以透過設定不一樣的建構式
+只要定義建構式時，參數型態與個數不同便可
+而這種方式稱之為"過載(Overload)"
+例如下:
+public class Some {
+    private int a = 10;
+    private String text = "n.a.";
+    public Some(int a) {
+        if(a > 0) {
+            this.a = a;
+        }
+    }
+    public Some(int a, String text) {
+        if(a > 0) {
+            this.a = a;
+        }
+        if(text != null) {
+            this.text = text;
+        }
+    }
+    ...
+}
+
+以上可以發現，some具有兩個建構式，差別在於參數數量不同
+而定義方法，也可以使用重載，例如valueOf()方法就有多個版本
+例如下:
+public static String valueOf(boolean b)
+public static String valueOf(char c)
+public static String valueOf(char[] data)
+public static String valueOf(char[] data, int offset, int count)
+public static String valueOf(double d)
+public static String valueOf(float f)
+public static String valueOf(int i)
+public static String valueOf(long l)
+public static String valueOf(Object obj)
+
+但是返回型態不可以作為方法的重載依據，例如下:
+public class Some {
+    public int someMethod(int i) {
+        return 0;
+    }
+    public double someMethod(int i) {
+        return 0.0;
+    }
+} 
+
+someMethod定義了兩個方法，但是差別僅在於回傳值不同
+這樣的重載定義是不可以的
+
+基礎型態與類別型態的重載
+範例: OverloadBoxing.java
+
+
+This的使用:
+this用於物件建立後為「這個物件」的參考名稱
+如果有同名問題時，可以使用this來分別
+public class CashCard {
+    private String number;
+    private int balance;
+    private int bonus;
+    public CashCard(String number, int balance, int bonus) {
+        this.number = number;     // 參數number指定給這個物件的number
+        this.balance = balance;   // 參數balance指定給這個物件的balance
+        this.bonus = bonus;        // 參數bonus指定給這個物件的bonus
+    }
+    ...
+}
+如上因為有同名的問題，在CashCard建構式內，有來自於引數與來自外部的同名變數
+因此就可以使用this來分辨兩者
+
+接著，以下是建構式重載的片段，你會發現if判斷不管在哪個建構室式內其實都是做一樣的事情
+public class Some {
+    private int a = 10;
+    private String text = "n.a.";
+    public Some(int a) {
+        if(a > 0) {
+            this.a = a;
+        }
+    }
+    public Some(int a, String text) {
+        if(a > 0) {
+            this.a = a;
+        }
+        if(text != null) {
+            this.text = text;
+        }
+    }
+    ...
+}
+
+因此我們可以改變寫法，如下:
+public class Some {
+    private int a = 10;
+    private String text = "n.a.";
+    public Some(int a) {
+        if(a > 0) {
+            this.a = a;
+        }
+    }
+    public Some(int a, String text) {
+       this(a);
+        if(text != null) {
+            this.text = text;
+        }
+    }
+    ...
+}
+這種寫法，在第二個建構式使用this(a)，這樣會呼叫到第一個建構式
+就不用再重複寫一次if的內容
+**注意:this只能出現在建構式的第一行喔
+
+而想要在建構式呼叫前後做一些流程可以參考範例: ObjectInitialBlock.java
+
+關鍵字final:
+如果區域變數宣告了final，表示設值後就不能再變動
+但是如果你只有宣告final變數，卻沒有給予數值
+這樣只能算是延遲數值的指定，因此數值無法改變，要在你已經給予數值之後
+
+static靜態:
+staic成員屬於類別，非個別物件
+如果在static中使用this，是一種語意上的錯誤
+總而言之，在static方法會區塊中不能出現this關鍵字
+如果你在程式碼中撰寫了某個物件資料成員
+雖然沒有撰寫this，但也隱含了這個物件某成員的意思
+總之static方法或區塊中，不能呼叫非static方法或區塊
+範例: Ball.java
+
+因此若是在static方法區塊中，便可以呼叫同為static資料成員或方法成員
+範例: Ball2.java
+
+在JDK5之後，新增了import static語法，可以在使用靜態成員時少打幾個字。
+例如System的out是static成員，為了顯示訊息，本來都要這麼撰寫：
+System.out.println("好麻煩")
+有了import static，就可以簡化
+範例: importStatic.java
+
+
+不定長度的引數:
+宣告參數列時要於型態關鍵字後加上 ...
+範例: MathTool.java
+
+使用不定長度引數時，方法上宣告的不定長度參數必須是參數列最後一個
+例如下:
+
+public void some(int arg1, int arg2, int... varargs) {
+     ...
+}
+
+不合法宣告：
+
+public void some(int... varargs, int arg1, int arg2) {
+     ...
+}
+
+使用兩個以上不定長度引數也是不合法的：
+
+public void some(int... varargs1, int... varargs2) {
+     ...
+}
+
+使用物件的不定長度引數，宣告的方法相同，例如：
+
+public void some(Other... others) {
+      ...
+}
+
+
+內部類別:
+以下建立非靜態內部類別:
+class Some {
+    class Other {
+    }
+}
+
+如果要使用Other類別，就必須要先建立Some類別實例，例如:
+Some s = new Some();
+Some.Other o = s.new Other();
+
+內部類別也可以使用public、protected或private宣告，例如:
+class Some {
+    private class Other {
+    }
+}
+
+內部類別也可以宣告為static，建立實例如下:
+Some.Other o = new Some.Other();
+被宣告為static的內部類別，雖然將外部類別當作名稱空間，但算是個獨立類別
+它可以存取外部類別static成員，但不可存取外部類別非static成員
+
+方法中也可以宣告類別，這通常是輔助方法中演算之用，方法外無法使用。例如：
+class Some {
+    public void doSome() {
+        class Other {
+        }
+    }
+}
+
+匿名內部類別（Anonymous inner class），例如:
+Object o = new Object() {
+    public String toString() {
+        return "無聊的語法示範而已";
+    }
+};
+
+
+傳值呼叫:
+C++之類的程式語言，呼叫方法傳遞引數給參數時
+可以有傳值呼叫（Call by value）或傳參考呼叫（Call by reference）的方式。
+Java當中只有傳值呼叫。傳值呼叫也簡稱傳值（Pass by value）
+傳參考呼叫也簡稱傳參考（Pass by reference）
