@@ -1,0 +1,128 @@
+繼承:
+過多的重複程式碼，在設計上就是不好的訊號
+如果有更多類別具有重複的程式碼，那就要修改更多類別，造成維護上的不便
+因此，我們可以把相同的程式碼提升為父類別
+假設我們現在要做一個遊戲，可以自訂腳色
+腳色一定都會有屬性值，如果每次在自訂腳色都要一串一串把關於屬性值的程式碼重複鍵入
+這樣下次要修改的時候也必須每一個都慢慢改
+因此我們可以做出改變，範例: Role.java
+將屬性值都放進父類別中
+
+因此我們可以使SwordsMan.java繼承Role.java
+如範例: SwordsMan.java
+當中又新寫了fight()這個函式
+如果原本已經在父類別有同樣名字的函式，則表示為"重新改寫"
+而extends則是用在繼承時所用的關鍵字
+再來我們也寫一個Magician.java繼承自Role.java
+
+最後我們將主程式寫在RPG.java中
+範例: RPG.java
+
+所以繼承的好處:
+1. 都會用到的程式碼，可以省略多次的複寫
+2. 都會用到的程式碼需要修改，可以改父類別就好
+
+在java中，每個子類別只能繼承一個父類別
+當中子類別與父類別間會有is-a的關係，中文稱為「是一種」的關係
+例如: SwordsMan繼承了Role，所以SwordsMan是一種Role（SwordsMan is a Role）
+Magician繼承了Role，所以Magician是一種Role（Magician is a Role）
+
+以下是能通過編譯的:
+SwordsMan swordsMan = new SwordsMan();
+Magician magician = new Magician();
+
+而下面這樣也可以通過編譯:
+Role role1 = new SwordsMan();
+Role role2 = new Magician();
+
+反而下面這樣無法通過編譯:
+SwordsMan swordsMan = new Role();  
+Magician magician = new Role();
+
+在java中，等號右邊應為子類別，而左邊則為父類別
+例如: Role role1 = new SwordsMan();
+表示SwordsMan是一種Role，所以放反的話當然就有問題
+
+再來看下面:
+Role role1 = new SwordsMan();
+SwordsMan swordsMan = role1;
+第一行沒有問題，而第二行就會出現編譯錯誤
+原因就如剛剛提的，放的位置錯誤了
+
+但是編譯器錯誤的原因在於
+他認為 role1不一定是一種SwordsMan
+因此如果你如下撰寫程式碼:
+Role role1 = new SwordsMan();
+SwordsMan swordsMan = (SwordsMan) role1;
+直接強硬地告訴編譯器，role1是一種SwordsMan
+這種方式叫做CAST
+那就可以通過編譯了，不過有可能產生不好的結果
+
+這算是多型的例子之一
+如果我們要撰寫一個可以顯示血量的方法
+可以如下:
+public static void showBlood(SwordsMan swordsMan) {
+    System.out.printf("%s 血量 %d%n",
+           swordsMan.getName(), swordsMan.getBlood());
+}
+
+public static void showBlood(Magician magician) {
+    System.out.printf("%s 血量 %d%n",
+           magician.getName(), magician.getBlood());
+}
+
+但你會發現其實兩個是差不多的東西
+差別僅僅在於引數的不同
+而這個部分的改進方式，就可以使用剛剛所使用的多型概念
+把它寫在一起，例如下:
+public static void showBlood(Role role)
+將參數改成接受Role物件，然而SwordsMan跟Magician都是其中一種Role
+所以都可以直接使用，程式撰寫更為方便且易於維護
+範例: RPG2.java
+
+什麼叫多型？
+以抽象講法解釋，就是使用單一介面操作多種型態的物件！
+在showBlood()方法中，既可以透過Role型態操作SwordsMan物件
+也可以透過Role型態操作Magician物件。
+
+那如果要在showBlood裡面呼叫fight()方法呢?
+直接寫role.fight(); 是會錯誤的喔
+雖然在SwordsMan跟Magician內都有自己定義fight()
+但是role內沒有，因此編譯會產生錯誤
+改進的方式是也在Role裡面先寫一個fight()方法
+內容可以不放東西，因為子類別在繼承後會自己自行定義
+所以每個子類別就可以定義自己適合的fight方式
+而這種重新定義的方式稱作"Override"
+範例: RPG3.java + Role2.java + SwordsMan2.java + Magician2.java
+
+需要注意的是"Override"的方法名字要與父類別相同
+如果不小心打成Fight()，那在RPG3.java內的role.fight();
+所跑出的內容，會找到父類別的fight()，也就是什麼都沒有喔
+
+在JDK5之後支援標註（Annotation），其中一個內建的標準標註就是@Override
+如果你在子類別中某個方法前標註@Override，表示要求編譯器檢查
+該方法是不是真的重新定義了父類別中某個方法，如果不是的話，就會引發編譯錯
+
+抽象方法與抽象類別
+剛剛Role2.java內寫的fight方法沒有寫任何code
+這樣如果別人不知道這內容是空的，就不會有人來複寫，因為也沒有被強制要override
+於此我們便可以使用抽象方法: 關鍵字Abstract
+例如下面:
+public abstract class Role {
+    ...略
+    public abstract void fight();
+}
+
+別中若有方法沒有實作，並且標示為abstract，表示這個類別定義不完整
+定義不完整的類別就不能用來生成實例，這就好比設計圖不完整
+不能用來生產成品一樣
+
+所以要將抽象類別實例化是不可以的，如果嘗試用抽象類別建構實例，就會引發編譯錯誤
+子類別如果繼承抽象類別，對於抽象方法有兩種作法
+一種作法是繼續標示該方法為abstract（該子類別因此也是個抽象類別，必須在class前標示abstract）
+另一個作法就是實作抽象方法。如果兩個作法都沒實施，就會引發編譯錯誤
+所以這樣就解決我們一開始提的問題，強迫要override
+子類別可以重新定義父類別的方法，重新定義時可以重新標示具體方法為抽象abstract
+並令該方法沒有實作（當然該子類別就也得標上abstract）
+如果又有類別繼承該子類別，就得實作該抽象方法。
+

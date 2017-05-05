@@ -1,0 +1,87 @@
+Protect成員:
+之前我們有提過了public，也就是完全公開
+還有privae，只有該類別可以使用，我們也有特別做了一些get方法
+藉以取得這些private成員資料
+那如果子類別想直接提取父類別的成員，怎麼辦哩?
+這時候可以使用protect
+例如下:
+public abstract class Role {
+    protected String name;
+    protected int level;
+    protected int blood;
+    ...略
+}
+
+被宣告為protected的成員，相同套件中的類別可以直接存取
+不同套件中的類別可以在繼承後的子類別直接存取
+因此繼承後的SwordsMan可以寫成以下模式:
+public class SwordsMan extends Role {
+    ...略
+    public String toString() {
+        return String.format("劍士 (%s, %d, %d)", this.name, 
+                this.level, this.blood);
+    }
+}
+
+有別於原本要用get方法來取得資料，可以直接this.變數，把需要的成員叫出來
+權限由小至大分別為: private < 無定義 < protected < public
+
+重新定義的細節:
+上一章有提到override，倘若想取用父類別的方法呢?
+可以在方法名稱前加上super關鍵字，例如下:
+public String toString() {
+        return "劍士 " + super.toString();
+}
+
+這邊override toString方法，當中使用super.toString來呼叫父類別的toSting方法
+可以用super來呼叫的父類別方法，不能定義為private(因為privte成員只能在該類別內使用)
+重新定義方法: 方法只能擴大，但不可以縮小，例如:public不可變private
+
+建構式:
+如果類別有繼承關係，在建構子類別實例後，會先進行父類別定義的初始流程
+再進行子類別中定義的初始流程，也就是建構子類別實例後
+會先執行父類別建構式定義的流程，再執行子類別建構式定義的流程。
+
+之前有說過可以有多個建構式，叫做重載
+如果父類別有重載，子類別建構式如果沒有指定要執行父類別中的哪個建構式
+域社會呼叫父類別中無參數的建構式
+範例: doSome.java
+
+呼叫父類別中重載建構式，例如範例: doSome2.java
+注意！this()與super()只能擇一呼叫，而且一定要在建構式第一行執行。
+編譯器會在你沒有撰寫任何建構式時，自動加入沒有參數的預設建構式（Default constructor）
+如果自行定義了建構式，就不會自動加入任何建構式了。
+
+final關鍵字:
+如果在指定變數值之後，就不想再改變變數值
+可以在宣告變數時加上final限定，如果後續撰寫程式時
+自己或別人不經意想修改final變數，就會出現編譯錯誤。
+
+如果宣告為final，但尚未給予值，也就是尚未用"="給值
+這樣則會延遲給值，所以依然可以給值，只是給完之後才真的算final
+
+class也可以用final，表示此類別是最後一個，也就是沒有子類別，就是不給繼承啦
+所以倘若繼承final類別，就會編譯錯誤
+
+
+有些類別沒有extends關鍵字繼承東西，事實上是有的。
+他們繼承自java.lang.Object。
+任何類別追溯至最上層父類別，一定就是java.lang.Object
+也就是Java中所有物件，一定「是一種」Object
+所以寫以下這樣是ok的:
+Object o1 = "Justin";
+Object o2 = new Date();
+因為不管事String還是Date都是一種Object
+
+倘若想要用陣列收集各種形態資料，就可以用Object[]來宣告，因為大家都"是一種"Object
+例如: Object[] objs = {"Monica", new Date(), new SwordsMan()};
+因為陣列長度有限，使用陣列來收集物件不是那麼地方便
+以下定義的ArrayList類別，則可以不限長度地收集物件
+範例: ArrayList.java
+
+使用定義的ArrayList.java
+範例: Guest.java
+
+而前面Role與SwordsMan部分所講到的toString方法的override
+其實是改寫Object的toString
+
