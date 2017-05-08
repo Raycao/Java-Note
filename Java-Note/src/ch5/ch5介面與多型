@@ -1,0 +1,163 @@
+介面定義行為:
+
+今天如果想寫一個有關海洋相關遊戲
+首先寫一個魚，因為魚會游泳
+因此定義Fish類別中有個swim()的行為
+範例: Fish.java
+
+接著新增小丑魚及鯊魚來繼承Fish
+範例: Anemonefish.java 、 Shark.java
+
+ok! 但是如果要新增人呢?
+因為人也會游泳，雖然Fish.java內有定義swim
+但是讓人去繼承Fish是非常奇怪的一件事
+
+之前有提過
+繼承: 代表"是一種"的關係(is-a)
+就這個情形看來，人是一種魚，顯然就有問題
+即便通過編譯，但邏輯與設計上不合理，可能會造成往後的維護問題
+如果所有會游泳的人事物都要繼承魚
+肯定會產生極大的問題
+
+而java中，子類別只能繼承一個父類別
+這也強化了"是一種"關係
+假設今天要實作飛魚類別檔案
+同時會游泳又會飛，由於"is-a"的關係
+你只能繼承魚沒辦法同時繼承鳥
+因此我們就需要重新考慮架構
+將「行為」給分類出來
+「游泳」「飛」都是一種行為
+讓需要的去使用，不需要的就不用
+這種方式，可以用關鍵字interface(介面)去定義
+範例: Swimmer.java
+
+介面用於定義行為，但不實作
+因為雖然很多東西都會游泳，但方式不太一樣
+Swimmer中的swim()方法沒有實作，直接標示為abstract，而且一定是public。
+物件若想擁有Swimmer定義的行為，就必須實作Swimmer介面
+我們讓Fish擁有Swimmer行為，實作介面需要implements關鍵字
+範例: Fish2.java
+
+實作介面有兩種方式
+1. 實作定義的方法
+2. 繼續將方法以abstract方式定義，範例: Fish2.java
+
+這邊再補上繼承Fish2.java的部分: Anemonefish2.java + Shark2.java
+沒有特別改變什麼，純粹改為繼承Fish2.java
+
+ok，如果現在要新增一個人類類別
+當然人類也會游泳，但我們不會讓他繼承Fish2.java
+因為這樣邏輯錯誤，即便編譯會通過
+我們可以讓這個類別直接實作Swimmer介面
+記得如果我們實作介面，要複寫介面方法或者繼續給abstract
+這邊我們直接Override
+範例: Human.java 
+
+那如果要實作一個潛水艇類別呢?
+當然也不會去繼承Fish2.java，畢竟不是一種魚
+我們採用跟Human一樣的做法
+範例: Submarine.java
+由Human跟Submarine可以看出雖然都實作介面Swimmer
+但是游泳根據不同的定義，有著不一樣的方式
+
+根據java語意:
+繼承會有「是一種」關係
+實作介面則表示「擁有行為」，但不會有「是一種」的關係
+
+Human與Submarine實作了Swimmer
+所以都擁有Swimmer定義的行為
+但它們沒有繼承Fish
+所以它們不是一種魚
+
+行為的多型:
+合法的多型語法。例如：
+Swimmer swimmer1 = new Shark();
+Swimmer swimmer2 = new Human();
+Swimmer swimmer3 = new Submarine();
+這三行程式碼都可以通過編譯，判斷方式是「右邊是不是擁有左邊的行為」
+或「是右邊物件是不是實作了左邊介面」
+
+接著看下面
+Swimmer swimmer = new Shark();
+Shark shark = swimmer;
+第一行沒有問題，第二行編譯就會有錯誤
+swimmer不一定是一種Shark
+
+上面swimmer事實上是參考至Shark沒錯
+所以可以用Cast(扮演)語法
+Swimmer swimmer = new Shark();
+Shark shark = (Shark) swimmer;
+
+在看下面:
+Swimmer swimmer = new Shark();
+Fish fish = swimmer;
+一樣的第二行會編譯失敗，因為swimmer不一定是一種fish
+
+但事實上swimmer確實參考至Shark(第一行)，是一種fish沒錯(因為Shark繼承自Fish)
+所以可以用cast語法
+Swimmer swimmer = new Shark();
+Fish fish = (Fish) swimmer;
+
+在看下面這個就會有些問題了:
+Swimmer swimmer = new Submarine();
+Fish fish = (Fish) swimmer;
+第二行，swimmer實際上參考了Submarine實例，你卻又要他扮演魚
+Submarine不是一種Fish，執行時期會因為扮演失敗而拋出ClassCastException
+
+寫個static的swim()方法，讓會游的東西都游起來，在不會使用介面多型語法時
+你可以像ch4多型一樣這樣寫:
+public static void doSwim(Fish fish) {
+    fish.swim();
+}
+public static void doSwim(Human human) {
+    human.swim();
+}
+public static void doSwim(Submarine submarine) {
+    submarine.swim();
+}
+
+但假設種類繁多，則會有維護困難
+因此可以如範例: Ocean.java 這樣設計
+
+
+解決需求變化:
+寫程式要有彈性，要有可維護性:
+如果增加新的需求，原有的程式無需修改
+只需針對新需求撰寫程式，那就是有彈性、具可維護性的程式。
+
+如果今天想新加入「飛」的行為
+我們可以用介面去定義Flyer介面
+範例: Flyer.java
+
+假設我們想新增一個海上飛機類別，它具有海面航行及飛行的行為
+我們可以同時實作Swimmer及Flyer介面
+範例: Seaplane.java
+
+Java中，類別可以實作兩個以上的類別，也就是擁有兩種以上的行為
+接下來我們新增一個飛魚類別，飛魚既會飛也會游泳
+但飛魚也是一種魚，因此我們可以這樣做
+讓飛魚繼承Fish2.java再實作Flyer介面
+範例: FlyingFish.java
+因此可以看出程式的彈性
+
+往後再做一些延伸擴展
+不是所有人都會游泳，因此我們修改Human.java為Human2.java
+然後新增一個SwimPlayer(游泳選手)類別
+因為游泳選手是一個人類然後會游泳
+所以我們讓SwimPlyer繼承Human然後實作Swimmer
+範例: SwimPlayer.java + Human2.java
+
+接下來有些飛機只能飛，不能swim
+因此設計一個Airplane類別
+範例: Airplane.java
+
+那我們就可以對Seaplane做修改
+Seaplane是一種飛機，然後具有游泳的行為
+因此我們讓Seaplane繼承Airplane，然後實作Swimmer介面
+範例: Seaplane2.java
+
+然直升機就只有飛的能力，並沒有游泳的能力
+我們新增一個直升機類別繼承自Airplane
+範例: Helicopter.java
+
+這就是所謂的程式彈性
