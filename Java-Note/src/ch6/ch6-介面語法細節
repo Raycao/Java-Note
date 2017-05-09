@@ -1,0 +1,116 @@
+介面的預設:
+java使用關鍵字interface來定義抽象行為類別，而其內方法則以public abstract定義
+例如下:
+public interface Swimmer {
+    public abstract void swim();
+}
+
+介面中的方法如果沒有實作，那肯定是公開的且是抽象的
+因為要給使用的類別來override，所以一定要是public而且abstract
+所以便利上，省略public abstract也是可以的，例如下:
+public interface Swimmer {
+    void swim();  // 預設就是public abstract
+}
+
+雖然省略了，但記得override記得要補上public
+忽略的話，權限會從:public→未標示
+之前有說過，override只能權限變大，不能變小
+
+
+interface定義常數
+public interface Action {
+    public static final int STOP = 0;
+    public static final int RIGHT = 1;
+    public static final int LEFT = 2;
+    public static final int UP = 3;
+    public static final int DOWN = 4;
+}
+範例: Action.java定義列舉常數
+配合使用，範例: Game.java
+
+在interface中，只能定義public static final的列舉常數
+所以便利上，可以省略這部分，寫成下面這樣子:
+public interface Action {
+    int STOP = 0;
+    int RIGHT = 1;
+    int LEFT = 2;
+    int UP = 3;
+    int DOWN = 4;
+}   
+
+JDK5之後有新增enum特性，所以建議使用enum
+類別可以實作兩個以上的介面，如果有兩個介面都定義了某方法
+而實作兩個介面的類別會怎樣嗎？
+程式面上來說，並不會有錯誤，照樣通過編譯
+
+但即便同名，但可能做的事是不盡相同，因此就必須稍加考慮如何辨別
+範例: Service.java
+
+如果做的事情是不一樣的，那麼在名稱上應該有所區別
+
+如果做的事情是一樣的，那麼可以先定義一個父介面，再讓Some與Other去繼承父介面
+再各自定義自己的方法，範例:Service2.java
+
+匿名內部類別:
+撰寫Java程式時，經常會有臨時繼承某個類別或實作某個介面並建立實例的需求
+由於這類子類別或介面實作類別只使用一次，不需要為這些類別定義名稱
+這時可以使用匿名內部類別（Anonymous inner class）來解決這個需求
+匿名內部類別的語法如下：
+
+new 父類別() | 介面() {
+    // 類別本體實作
+};
+
+內部類別也有所謂的匿名內部類別，以繼承Object重新定義toString()方法為例：
+
+Object o = new Object() {  // 繼承Object重新定義toString()並直接產生實例
+    @Override
+    public String toString() {
+        return "無聊的語法示範而已";
+    }
+};
+
+也就是在物件化之後，以大括弧接在其後，並在內部進行override
+ok，在回到介面的部分來，如果是實作某個介面
+例如若Some介面定義了doService()方法，要建立匿名類別實例的例子如下:
+
+Some some = new Some() {  // 實作Some介面並直接產生實例
+    public void doService() {
+        System.out.println("作一些事");
+    }
+};
+
+從JDK8開始，若介面僅定義一個抽象方法，可以使用Lambda來簡化這個程式的撰寫，例如：
+
+Some some = () -> {
+    System.out.println("作一些事");
+};
+
+
+看一些範例，假如現在要做多人連線程式，我們需要每個連接客戶端資訊
+包括ip、名字。範例: Client.java
+
+每個新進來的連線端都要加進ClientQueue來集中管理
+若程式中其它部份希望在ClientQueue的Client加入或移除時可以收到通知
+以便作一些處理（例如進行日誌記錄）
+那麼可以將Client加入或移除的資訊包裝為ClientEvent
+其內可以接收Client物件並抓到Client資訊
+範例: ClientEvent.java
+
+接著我們新增一個ClientListener介面，如果有物件對Client加入ClientQueue有興趣，可以實作這個介面
+範例: ClientListener.java
+
+ClientQueue新增或移除Client時予以通知。範例: ClientQueue.java
+
+ClientQueue會收集連線後的Client物件，Java SE API就提供了java.util.ArrayList，可以讓你進行物件收集，範例中使用了java.util.ArrayList來收集Client以及對ClientQueue感興趣的ClientListener。
+
+如果有物件對Client加入ClientQueue有興趣，可以實作ClientListener
+並透過addClientListner()註冊。當每個Client透過ClientQueue的add()收集時
+會用ArrayList收集Client，接著使用ClientEvent封裝Client相關資訊
+接著使用for迴圈將註冊的ClientListener逐一取出，並呼叫clientAdded()方法進行通知。
+如果有物件被移除，流程也是類似，這可以在ClientQueue的remove()方法中看到相關程式碼
+
+作為測試，可以使用以下的程式碼，其中使用匿名內部類別，直接建立實作ClientListener的物件
+範例: MultiChat.java
+
+在JDK8之前，如果要在匿名內部類別中存取區域變數，則該區域變數必須是final
