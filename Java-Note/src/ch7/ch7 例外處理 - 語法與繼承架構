@@ -1,0 +1,270 @@
+例外處理:
+
+語法與繼承架構:
+使用try、catch:
+傳寫一個程式，可以讓使用者連續輸入整數，最後輸入0結束後會顯示輸入數的平均值
+範例: Average.java
+
+ok，但是如果使用者輸入的不是數字就會產生錯誤
+因為我們使用Scanner的nextInt方法，會把使用者輸入剖析為整數型態
+如果你輸入文字則會不符合剖析需求
+
+java的所有錯誤都會被包裹為物件，我們可以嘗試使用try-catch
+替錯誤的物件做後續處理
+範例: Average2.java
+
+使用try-catch，JVM會嘗試執行包裹在try區塊內的程式碼
+如果有錯誤就會跳離，然後進而比對catch括弧內的型態
+若符合發生錯誤的物件型態，就執行catch區塊內的執行碼
+catch (InputMismatchException ex)
+表示錯誤物件為InputMismatchException型態
+後面則為引數名稱，可自由取名
+
+如果發生錯誤就會進入catch區塊，之後便沒有程式碼
+範例示範想要在捕捉錯誤處理過後，可以回復到程式正常執行流程的方式
+範例: Average3.java
+
+
+
+例外繼承架構:
+事實上促勿物件是有繼承架構的
+首先，錯誤會被包成物件，物件都是可以被拋出的(throw)
+因此所有可拋出的物件都繼承自java.lang.Throwable
+而且都可以用try-catch捕捉
+Throwable有兩個子類別: java.lang.Error與java.lang.Exception。
+
+Error與其子類別實例: 代表嚴重系統錯誤，例如硬體層面錯誤、JVM錯誤或記憶體不足等問題
+可以使用try-catch處理，但不建議
+原因是因為如此嚴重的錯誤基本上要程式自行回復是非常困難的
+
+Error物件拋出時，基本上不用處理，任其傳播至JVM為止
+或者是最多留下日誌訊息，供開發者除錯時作為修正程式時的線索
+
+
+程式設計本身的錯誤，建議使用Exception或其子類別實例來表現
+所以通常稱錯誤處理為例外處理（Exception handling）。
+
+如果某個方法宣告會拋出Throwable、Exception或子類別實例
+但又不屬於Error或java.lang.RuntimeException或其子類別實例
+你就必須明確使用try、catch語法加以處理
+或者在方法用throws宣告這個方法會拋出例外，否則會編譯失敗
+
+Exception或其子物件，但非屬於RuntimeException或其子物件
+稱為受檢例外（Checked Exception），意思就是要讓編譯器檢查
+API設計者實作某方法時，某些條件成立時會引發錯誤
+而且認為呼叫方法的客戶端有能力處理錯誤，要求編譯器提醒客戶端必須明確處理錯誤
+不然不可通過編譯，API客戶端無權選擇要不要處理。
+
+屬於RuntimeException衍生出來的類別實例，代表API設計者實作某方法時
+某些條件成立時會引發錯誤，而且認為API客戶端應該在呼叫方法前做好檢查
+以避免引發錯誤，之所以命名為執行時期例外
+是因為編譯器不會強迫一定得在語法上加以處理，亦稱為非受檢例外（Unchecked Exception）。
+
+例如使用陣列時，若存取超出索引就會拋出ArrayIndexOutOfBoundsException
+但編譯器並沒有強迫你在語法上加以處理
+這是因為ArrayIndexOutOfBoundsException是一種RuntimeException
+可以在API文件的開頭找到繼承架構
+
+而我們在Average2.java中用的InputMismatchException被設計為一種RuntimeException
+所以在Average.java中即便沒有做例外處理，也不會被編譯器要求一定要做try-catch
+如果Average3.java想要避免出現InputMismatchException錯誤
+可以在接收輸入後，檢查是否為數字格式，若不是則提醒使用者
+範例: Average4.java
+
+如果父類別例外物件在子類別例外物件前被捕捉
+則catch子類別例外物件的區塊將永遠不會被執行
+例如Exception與IOException為父子關係
+如果判斷時先遇到Exception的catch處理，就會進入其區塊
+而不會再進到IOException的catch區塊
+所以在寫try-catch的時候就要特別注意父子關係的順序，調換程式區塊的順序即可
+
+在看下面:
+try {
+    作一些事...
+} catch(IOException e) {
+    e.printStackTrace();
+} catch(InterruptedException e) {
+    e.printStackTrace();
+} catch(ClassCastException e) {
+    e.printStackTrace();
+}
+IOException與InterruptedException及ClassCastException的catch區塊都做同樣的事
+那你可以將他們寫在一起
+
+例如下:
+try {
+    作一些事...
+} catch(IOException | InterruptedException | ClassCastException e) {
+    e.printStackTrace();
+}
+這樣的方式稱為多重捕捉(multi-catch)
+那你可能會想說剛剛父子的例外捕捉可不可以用多重捕捉寫一起
+結論是: 不行，catch括弧內的錯誤例外物件不能有繼承的關係
+所以你寫
+catch(IOException | Exception) 這樣子是不可以的
+
+
+要抓還是要拋?:
+我們剛剛一直有講到拋，這個字
+這邊就會提到它的意義為何
+先舉個例子
+如果這個程式庫是用在Web網站上，發生錯誤時顯示在主控台上
+Web使用者怎麼會看得到？你開發的是程式庫，例外發生時如何處理
+是程式庫使用者才知道，直接在catch中寫死處理例外或輸出錯誤訊息的方式
+並不符合需求。
+
+因此我們需要一個方法來將錯誤物件丟出來，來讓呼叫方法的客戶端處理
+而這個方式我們就稱為拋(throw)
+
+操作物件的過程中如果會拋出受檢例外，但目前環境資訊不足以處理例外
+所以無法使用try、catch處理時，可由方法的客戶端依當時呼叫的環境資訊進行處理。
+為了告訴編譯器這件事實，必須在方法上使用throws宣告此方法會拋出的例外類型或父類型
+編譯器才會讓你通過編譯。
+
+拋出受檢例外，表示你認為呼叫方法的客戶端有能力且應該處理例外
+如果你認為客戶端呼叫方法的時機不當引發了某個錯誤，希望客戶端準備好前置條件
+再來呼叫方法，這時可以拋出非受檢例外
+
+實際上在例外發生時，可使用try、catch處理當時環境可進行的例外處理
+當時環境下無法決定如何處理的部份，可以拋出由呼叫方法的客戶端處理。
+如果想先處理部份事項再拋出，可以如範例: FileUtil.java
+
+範例在catch區塊中，做完部分錯誤處理後，使用throw將例外再拋出
+而throw這件事，不一定要在catch區塊中做
+在流程中拋出例外，就會跳離原有的流程，受檢或非受檢都可以拋出
+
+如果拋出受檢例外，也就是一定要處理的例外，否則編譯器不給通過
+拋出這種例外，表示你認為客戶端有能力且應處理此例外
+所以在方法上就要使用throws宣告
+
+如果是拋出非受檢例外，就不用throws宣告
+
+在看範例: FileUtil2.java
+你可以發現此範例會拋出FileNotFoundException與EOFException
+而其實這兩種錯誤例外物件都是一種IOException
+然後你也發現範例的兩種catch區塊內都做一樣的事情
+所以你就想乾脆把這兩個寫一起
+如同範例: FileUtil3.java
+直接catch IOException，結果是這樣會編譯錯誤
+這種錯誤在JDK6之前會出現，原因是那時候的編譯器還沒有辦法判斷
+但在JDK7以後便不會有此錯誤
+
+如果使用繼承時，父類別某個方法宣告throws某些例外，子類別重新定義該方法時可以：
+
+    不宣告throws任何例外
+    可throws父類別該方法中宣告的某些例外
+    可throws父類別該方法中宣告例外之子類別
+
+但是不可以：
+
+    throws父類別方法中未宣告的其它例外
+    throws父類別方法中宣告例外之父類別
+
+
+
+貼心還是造成麻煩:
+例外處理的本意是，在程式錯誤發生時
+能夠有明確的方式通知API客戶端，讓客戶端採取進一步的動作修正錯誤
+
+但有些錯誤發生例外，是很難被回復的
+如果沒有足夠的資訊讓你處理例外，你可以就現有資訊處理完例外後，重新拋出例外。
+但是如果例外在底層位置發生，你拋出例外也不過往上跑一層
+倘若要經過很多層才能到達顯示層，勢必在每一層都得拋出例外
+這樣顯得太麻煩。
+
+重新拋出例外時，除了將捕捉到的例外直接拋出
+也可以考慮為應用程式自訂專屬例外類別，讓例外更能表現應用程式特有的錯誤資訊。
+自訂例外類別時，可以繼承Throwable、Error或Exception的相關子類別
+通常建議繼承自Exception，如果不是繼承自Error或RuntimeException
+那麼就會是受檢例外。
+
+如同以下繼承方式自訂受檢例外:
+public class CustomizedException extends Exception { 
+// 自訂受檢例外的一個例子
+    ...
+}
+
+因為上下文環境沒有足夠資訊讓你處理例外，可以就現有資訊處理完例外後
+重新拋出例外，既然你已經針對錯誤做了某些處理，那麼也就可以考慮自訂例外
+用以更精確地表示出未處理的錯誤。
+
+根據你是否認為客戶端有無能力處理未處理的錯誤
+來決定繼承自Exception或RuntimeException
+
+而重新拋出的例子如下:
+try {
+    ....
+} catch(SomeException ex) {
+    // 作些可行的處理
+    // 也許是 Logging 之類的
+    throw new CustomizedException("error message..."); // Checked 或 Unchecked？
+}
+
+記得我們說過錯誤例外都是用物件包起來
+所以用new把它實例化變成物件，應該不難理解
+
+
+認識堆疊追蹤:
+在多重方法呼叫下，例外發生點可能是在某個方法之中
+若想得知例外發生的根源，以及多重方法呼叫下例外的堆疊傳播
+可以利用例外物件自動收集的堆疊追蹤（Stack Trace）來取得相關資訊。
+
+好，先講一下堆疊，就是先進後出的概念
+首先你在類別內，可能會在實例化其他類別，也有可能會有內部類別之類的
+當你在用內部類別的時候難道外部類別就葛闢了嗎?
+當然不會!! 至少也要先等內部結束工作後，外部再結束
+也就是外部先實例→內部再實例→內部結束→外部結束
+你大概可以看出一點堆疊的意境了吧 
+最先出現的最後離開。
+
+好，來看一下範例: Main.java
+查看堆疊追蹤最簡單的方法，就是呼叫例外物件的printStackTrace()方法
+此程式中c()會往上呼叫，而在a中null不可能可以轉成大寫，所以這邊會發生例外錯誤
+以下是執行結果:
+java.lang.NullPointerException
+	at ch7.Main.a(Main.java:23)
+	at ch7.Main.b(Main.java:17)
+	at ch7.Main.c(Main.java:13)
+	at ch7.Main.main(Main.java:6)
+
+從上而下，最上面是例外的根源，以下則是呼叫方法的順序
+這就是使用printStackTrace()方法的好處，方便於追蹤錯誤來源
+
+如果想要取得個別的堆疊追蹤元素進行處理，則可以使用getStackTrace()
+這會傳回StackTraceElement陣列，陣列中索引0為例外根源的相關資訊
+之後為各方法呼叫中的資訊，可以使用StackTraceElement的getClassName()
+getFileName()、getLineNumber()、getMethodName()等方法取得對應的資訊。
+
+程式碼中不可有私吞例外的行為，例如在捕捉例外後什麼都不作
+這樣的程式碼會對應用程式維護造成嚴重傷害，因為例外訊息會完全中止
+之後呼叫此片段程式碼的客戶端，完全不知道發生了什麼事
+造成除錯異常困難，甚至找不出錯誤根源
+
+在使用throw重拋例外時，例外的追蹤堆疊起點
+仍是例外的發生根源，而不是重拋例外的地方。
+範例: Main2.java
+
+想要讓例外堆疊起點為重拋例外的地方，可以使用fillInStackTrace()
+這個方法會重新裝填例外堆疊，將起點設為重拋例外的地方，並傳回Throwable物件。
+範例: Main3.java
+在範例中，在第二次顯示堆疊追蹤的起點，就是重拋例外的起點
+
+
+關於assert:
+有時候，需求或設計時就可確認，程式執行的某個時間點或某個情況下
+一定是處於或不處於何種狀態，若不是，則是個嚴重錯誤
+開發過程中發現這種嚴重錯誤，必須立即停止程式確認需求與設計。
+
+程式執行的某個時間點或某個情況下
+必然處於或不處於何種狀態，這是一種斷言（Assertion）
+
+assert語法，有兩種使用的語法：
+assert boolean_expression;
+assert boolean_expression : detail_expression;
+
+boolean_expression若為true，則什麼事都不會發生
+如果為false，則會發生java.lang.AssertionError
+此時若採取的是第二個語法，則會將detail_expression的結果顯示出來
+如果當中是個物件，則呼叫toString()顯示文字描述結果。
+由於較為瑣碎，參考此網址: 
+https://openhome.cc/Gossip/Java/Assert.html
