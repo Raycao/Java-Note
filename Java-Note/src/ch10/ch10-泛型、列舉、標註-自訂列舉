@@ -1,0 +1,181 @@
+ch10-泛型、列舉、標註-自訂列舉
+使用 enum 列舉常數:
+
+在ch6 介面語法細節中，我們有使用interface來定義列舉常數
+ch6範例: Action.java + Game.java
+
+JDK5之後新增了enum語法，可用於定義列舉常數
+範例: Action.java
+
+範例中顯示enum定義列舉常數最簡單的例子
+enum繼承自java.lang.Enum
+繼承的細節由編譯器處理，所以如果你直接寫繼承enum類別會被編譯器拒絕
+編譯後產生Action.class檔案，反組譯後部分細節如下:
+
+public final class Action extends Enum {
+    略...
+    private Action(String s, int i) {
+        super(s, i);
+    }
+    public static final Action STOP;
+    public static final Action RIGHT;
+    public static final Action LEFT;
+    public static final Action UP;
+    public static final Action DOWN;
+    略...
+    static {
+        STOP = new Action("STOP", 0);
+        RIGHT = new Action("RIGHT", 1);
+        LEFT = new Action("LEFT", 2);
+        UP = new Action("UP", 3);
+        DOWN = new Action("DOWN", 4);
+        略...
+    }
+}
+
+可以發現enum定義的Action實際上是類別
+當中定義的常數，實際上是public static final，且為Action實例
+你無法直接撰寫程式直接實例化Action，因為建構式權限設定為private
+只有Action類別中才可以實例化。
+範例: Game.java
+
+原先在ch6中，使用介面做列舉常數，在使用列舉常數時
+輸入都為int型態，如果有沒有定義的int被輸入進來
+在switch中還是必須撰寫default來攔截這些例外
+但是現在使用enum之後，不必再特別撰寫Default
+反之在一開始就會判斷出是否是有定義的列舉常數
+所以不用像先前範例，必須使用default於執行時期檢查
+編譯器在編譯時期會進行型態檢查。
+
+
+
+瞭解 java.lang.Enum:
+
+Enum的class定義：
+
+public abstract class Enum<E extends Enum<E>>
+        implements Comparable<E>, Serializable {
+    ...
+    public final int compareTo(E o) {
+        Enum other = (Enum)o;
+        Enum self = this;
+        if (self.getClass() != other.getClass() && // optimization
+            self.getDeclaringClass() != other.getDeclaringClass())
+            throw new ClassCastException();
+        return self.ordinal - other.ordinal;
+    }
+    ...
+}
+
+Enum是個抽象類別，無法直接實例化
+實作了Comparable介面，在compareTo()方法中，主要是針對ordinal成員比較
+也就是在需要排序Enum實例的場合，是依據ordinal成員進行排序。
+ordinal成員值是在Enum建構式中設定
+ction的建構式被宣告為private，因此只能在Action類別中呼叫
+呼叫建構式時，會傳入代表Action列舉成員的名稱字串與int值
+而在Action建構式中呼叫了super()
+因此列舉成員的名稱字串與int值會分別設定給Enum的name與ordinal成員
+因此ordinal的值，會是使用enum列舉的成員順序。
+
+JDK 1.4之前撰寫的API，仍是使用interface定義常數作為列舉值，在使用enum定義列舉之後
+若仍想與這些舊API合作，就可以呼叫Enum實例的ordinal()方法。
+範例: GameDemo.java
+
+
+
+進階 enum 運用
+反編譯Action列舉的程式碼，可以看到還有個values()方法
+這個方法會將內部維護Action列舉實例的陣列複製後傳回
+如果你想要知道有哪些列舉成員，就可以使用這個方法
+由於是複製品，因此改變傳回的陣列，並不會影響Action內部所維護的陣列。
+
+
+在上一段當中，我們知道列舉繼承自Enum類別
+除了編譯器自動產生private建構式之外，也可以自行定義建構式
+條件式不能為公開(public)建構式，也不能在建構式中呼叫super
+
+舉例來說:
+之前我們有說過ordinal的值，會是enum列舉的成員順序，其數值由0開始
+但倘若我們想修改數字呢?
+原本我們使用interfave定義的列舉常數，例如下:
+public interface Priority {
+    int MAX = 10;
+    int NORM = 5;
+    int MIN = 1;
+}
+
+可以發現有自定義的編號
+但是如果你現在使用enum重新定義列舉
+但又必須與既存API搭配，也就是定義好的列舉實例
+必須有個int值符合既存API的Priority值，這時怎麼辦？
+範例: Priority,java
+
+範例中，直接在列舉成員後加上括號，就是指定建構式所需要的引數
+由於Enum的ordinal()被宣告為final，不能重新定義
+所以自定義了value()方法來傳回int值。
+
+以下反組譯Priority.class
+
+public final class Priority extends Enum {
+    ...略
+    private Priority(String s, int i, int value) {
+        super(s, i);
+        this.value = value;
+    }
+    public int value() {
+        return value;
+    }
+    ...略
+    public static final Priority MAX;
+    public static final Priority NORM;
+    public static final Priority MIN;
+    private int value;
+    private static final Priority \$VALUES[];
+
+    static
+    {
+	MAX = new Priority("MAX", 0, 10);
+        NORM = new Priority("NORM", 1, 5);
+        MIN = new Priority("MIN", 2, 1);
+        \$VALUES = (new Priority[] {
+            MAX, NORM, MIN
+        });
+    }
+}
+
+可以發現我們自定義的建構式，反而變成編譯器用來產生真正建構式時參考之用
+定義的value參數，編譯器會放在真正建構式的name與ordinal之後
+真正的建構式會呼叫super()時傳入name與ordina
+（所以你不可以在自定義建構式中呼叫super()）
+後面才是自定義建構式中的程式碼
+
+定義列舉還可以實作介面，例如範例介面: Command.java
+列舉實作介面範例: Action3.java
+其實作法就如同一般class實作介面一樣
+但是如果以希望列舉成員可以有各自不同實作
+參考範例: Game3.java
+我們希望可以執行Game3，藉以達到我們的需求
+
+之前我們都是用switch比對列舉實例(Action3.java)
+其實定義enum時有個特定值類別本體（Value-Specific Class Bodies）語法
+範例: Action4.java
+
+發現到，在列舉成員後，直接加上{}實作Command的execute()方法
+使得每個列舉實例都有不同的execute()實作，表達上會比switch清楚
+
+實際上編譯器會將Action4標示為抽象類別
+並替每個列舉成員後的{}語法，產生匿名內部類別
+匿名內部類別繼承了Action3，實作了execute()方法
+
+反組譯後如下:
+	STOP = new Action3("STOP", 0) {
+            public void execute() {
+                System.out.println("\u64AD\u653E\u505C\u6B62\u52D5\u756B");
+            }
+        };
+
+所以每個列舉成員，實際上都參考至Action3的匿名子類別。
+
+特定值類別本體語法不僅在實作介面時可以使用，也可以運用在重新定義父類別方法。
+例如重新定義toString()，以先前Priority為例，可改寫為以下
+範例: Priority2.java
