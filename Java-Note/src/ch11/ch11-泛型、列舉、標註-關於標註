@@ -1,0 +1,202 @@
+ch11-泛型、列舉、標註-關於標註
+常用標準標註:
+
+Java提供了一些標準標註，先前經常看到的@Override就是標準標註
+它在原始碼中提供編譯器的訊息是，被標註的方法必須是父類別或介面中已定義的方法
+請編譯器協助是否真的為重新定義方法。
+
+如果原本要重新定義run()方法，結果打成Run()
+那就不是重新定義方法了，反而變成定義新方法
+所以壁面這種錯誤，就加上@Override
+讓編譯器看到此標註，瞭解必須檢查父類別中是否存在Run()方法
+但父類別實際上並沒有這個方法，所以會回報錯誤。
+
+
+如果某個方法原先存在於API中，後來不建議再使用
+可以於該方法上標註@Deprecated。例如:
+public class Some {
+    @Deprecated
+    public void doSome() {
+        ...
+    }
+}
+
+編譯後的.class會儲存這個資訊，若有使用者後續又想呼叫或重新定義這個方法
+編譯器會提出警訊（IDE通常會在方法加上刪除線表示）如下:
+
+Note: XXX.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+
+JDK5之後加入泛型支援，對於支援泛型的API
+建議明確指定泛型真正型態，如果沒有指定的話，編譯器會提出警訊。
+例如程式碼若含有以下片段：
+
+public void doSome() {
+     List list = new ArrayList();
+     list.add("Some");
+}
+
+由於List與ArrayList支援泛型，但這邊沒有指定泛型真正型態，編譯時會出現以下訊息：
+
+Note: xxx.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+如果不想看到這個警訊，可以使用@SuppressWarnings指定抑制unckecked的警訊產生
+@SuppressWarnings的value可以指定要抑制的警訊種類。如下
+
+@SuppressWarnings(value={"unchecked"})
+public void doSome() {
+     List list = new ArrayList();
+     list.add("Some");
+}
+
+
+例如你真的想呼叫@Deprecated標示過的方法，又不想看到警訊，可以如下：
+
+@SuppressWarnings(value={"deprecation"})
+
+也可以一次指定抑制多項警訊：
+
+@SuppressWarnings(value={"unchecked", "deprecation"})
+
+
+在使用泛型定義不定長度引數時，編譯器會提示開發人員
+有沒有注意到heap pollution問題，如果開發人員確定避免了這個問題
+則可以使用@SafeVarargs加以標註。例如下:
+
+public class Util {
+    @SafeVarargs
+    public static <T> void doSome(List<String>... varargs) {
+        ...略
+    }
+}
+
+所謂的heap pollution，也就是編譯器無法檢查出一些執行時期的型態錯誤
+例如我們在泛型有提到的java型態抹除就會有這種狀況
+
+
+
+自訂標註:
+每個標註都會有個標註型態（Annotation type）
+所有標註型態其實都是 java.lang.annotation.Annotation子介面
+例如:@Override的標註型態為java.lang.Override
+@Deprecated的標註型態為java.lang.Deprecated
+位於java.lang套件中。
+
+要定義一個標註可以使用@interface。
+例如： public @interface Test {} 
+範例: Test.java
+編譯完成後，就可以在程式碼中使用@Test標註。
+
+如果標註名稱本身無法提供足夠資訊，可進一步設定單值標註（Single-value Annotation）
+範例: Test2.java
+
+Test2當中設定timeout並設定為int
+表示之後使用@Test2標註會有timeout屬性可以設定int值。例如:
+
+@Test2(timeout = 10)
+public void testDoSome2() {
+    ...
+}
+
+標註的屬性也可以使用陣列型式，範例:Test3.java
+因此你可以這樣使用Test3標註:@Test3(args = {"arg1", "arg2"})
+
+
+定義標註屬性時，如果屬性名稱為value，則可以省略屬性名稱，直接指定值。
+範例: Ignore.java
+原先使用方式是: @Ignore(value = "message")
+因為屬性名稱為value，所以可以省略成這樣表示: @Ignore("message")
+
+
+倘若value為陣列也可以這樣使用，範例:TestClass
+此範例順便示範其接受內容為類別物件
+原先使用方式: @TestClass(value = {Some.class, Other.class})
+簡略的使用方式: @TestClass({Some.class, Other.class})
+
+
+另外也可以對標註內的屬性成員設定預設值，需要配合關鍵字default
+範例: Test4.java
+如同範例，則timeout屬性預設值就是0，message預設就是空字串
+也可以再重新設定 ，如果設定@Test4(timeout = 10, message = "逾時10秒")
+則timeout屬性的值就是10，message就是"逾時10秒"
+
+
+若為Class設定，則預設不得接null，會產生編譯錯誤，需自訂一個類別作為預設值
+範例: Test5.java
+如果要設定陣列預設值的話，可以在default之後加上{}。
+若有需要也可以在{}中放元素值。
+範例: Test6.java
+
+定義標註時，可以使用java.lang.annotation.Target限定標註使用位置
+限定時可指定java.lang.annotation.ElementType的列舉值:
+
+package java.lang.annotation;
+public enum ElementType {
+    TYPE,                  // 用於類別、介面、列舉等
+    FIELD,                 // 用於資料成員
+    METHOD,                // 用於方法
+    PARAMETER,             // 用於方法上的參數
+    CONSTRUCTOR,           // 用於建構式
+    LOCAL_VARIABLE,        // 用於區域變數
+    ANNOTATION_TYPE,       // 用於標註型態
+    PACKAGE,               // 適用套件
+    TYPE_PARAMETER,        // 用於泛型宣告，JDK8新增
+    TYPE_USE               // 用於各種型態，JDK8新增
+}
+
+範例: Test7.java，限定用於方法的標註範例。
+
+製作JavaDoc文件時，預設並不會將標註資料加入文件中
+如果想要將標註資料加入文件，可以使用java.lang.annotation.Documented。
+範例: Test8.java
+
+定義標註並使用在程式碼時，預設父類別有設定的標註，並不會被繼承至子類別
+若想要標註被子類別繼承，可以使用java.lang.annotation.Inherited標註
+範例: Test9.java
+
+JDK8後新增型態標註（Type Annotations），可以讓你在有型態資訊出現的任何位置進行標註
+例如: List<@Email String> emails = ...;
+主要也是透過java.lang.annotation.Target及java.lang.annotation.ElementType
+參照前面你可以發現ElementType擁有TYPE_PARAMETER與TYPE_USE兩個列舉值
+我們可以透過這兩個列舉來達到所需求。
+範例: Email.java
+
+
+讀取標註資訊:
+自訂標註後，預設資訊會存於.class檔，可被編譯器或位元碼分析工具讀取
+而執行時其無法讀取標註資訊。
+如果希望於執行時期讀取標註資訊
+可以於自訂標註時使用java.lang.annotation.Retention
+搭配java.lang.annotation.RetentionPolicy列舉指定
+
+package java.lang.annotation;
+public enum RetentionPolicy {
+    SOURCE,  // 標註資訊留在原始碼（不會儲存至.class檔案）
+    CLASS,   // 標註資訊會儲存至.class檔案，但執行時期無法讀取
+    RUNTIME  //標註資訊會儲存至.class檔案，但執行時期可以讀取
+}
+
+RetentionPolicy為SOURCE的例子為@SuppressWarnings
+其作用僅在告知編譯器抑制警訊，所以不必將這個資訊儲存於.class檔案
+@Override也是，其作用僅在告知編譯器檢查是否真為重新定義方法。
+
+
+RetentionPolicy為RUNTIME的時機，在於讓標註於執行時期提供應用程式資訊
+於讓標註於執行時期提供應用程式資訊
+可使用java.lang.reflect.AnnotatedElement介面實作物件取得標註資訊
+
+Class、Constructor、Field、Method、Package等類別
+都實作了AnnotatedElement介面，如果標註在定義時的RetentionPolicy指定為RUNTIME
+就可以從Class、Constructor、Field、Method、Package等類別的實例
+取得設定的標註資訊。
+範例: Debug.java
+
+範例:Other.java，將@Debug用於程式中
+範例: DebugTool.java，此範例範例可用來讀取@Debug設定的資訊
+主要是透過Java的Reflection API。
+
+
+
+
