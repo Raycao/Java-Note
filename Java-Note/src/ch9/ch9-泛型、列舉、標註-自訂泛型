@@ -242,5 +242,5 @@ Node<Fruit> fruit = new Node<>(new Fruit(), null);
 Node<? super Banana> node = fruit;
 Node<? super Apple> node = fruit;
 
-
+ÃB¥~°Ñ¦Ò: http://cloudlife2013.blogspot.tw/2013/09/generics.html
 

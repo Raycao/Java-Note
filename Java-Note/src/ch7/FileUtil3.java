@@ -2,6 +2,7 @@ package ch7;
 
 import java.io.EOFException;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class FileUtil3 {
 	//宣告的兩種例外物件，其實都是一種IOException
