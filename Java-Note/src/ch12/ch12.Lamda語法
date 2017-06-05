@@ -1,0 +1,102 @@
+Lamda語法
+
+來源: https://magiclen.org/java-8-lambda/
+
+Java8後導入新型態語法:Lamda
+
+Lamda定義:
+Lamda唯一個函數，可以根據輸入值，決定輸出值
+但Lamda不需要替函數命名，所以Lamda可以說是「匿名的」(Anonymous)
+
+
+匿名類別
+java有使用匿名類別將物件實體化的方式，範例:MainClass.java
+
+所謂的匿名不是指範例內的classA類別
+(classA已經有類別名稱「classA」，所以不會是匿名類別)
+所謂匿名的點在於，new的時候，被重新修改過的classA
+在其後加上{}，就淡定為重新修改。
+
+非匿名類別範例: MainClass2.java
+與MainClass.java不同的是，將原先使用的匿名類別
+另外宣告一個classB出來，使用時直接new classB
+這樣便不是匿名類別
+每次只能夠在同一個程式碼位置new出實體的匿名類別
+ClassB則可以在任何Scope所及的地方new出實體。
+
+
+Java Lamda
+Lambda語法只能用來表示一個「只擁有一個方法的介面」所實作出來的匿名類別
+「只擁有一個方法的介面」在Java中很常使用到
+例如執行緒的Runnable介面只擁有一個run方法
+或是AWT的ActionListener只擁有一個actionPerformed方法。
+這類介面，都可以直接使用Lambda，將它們擁有的那單個方法快速實作出來
+
+
+Lamda語法結構: input -> body
+input可以有以下多種表示:
+不輸入: ()
+單個輸入: x
+多個輸入: (int x,int y)
+多個輸入(省略型態): (x,y)
+
+body可以有以下多種表示:
+什麼都不做: {}
+單行不回傳值: System.out.println("No");
+多行不回傳值: 
+{
+	System.out.println("NO");
+	System.out.println("NO2");
+}
+
+單行回傳值: x+y
+多行回傳值:
+{
+	x++;
+	y-=x;
+	return x+y;
+}
+
+
+Lambda實際應用與效能比較:
+Java中，許多只有一個方法的介面，如果要使用這些介面
+往往需要使用到至少4行程式碼才有辦法達成
+例如下:
+Runnable runnbale = new Runnable() {
+	    public void run() {
+	    	System.out.println("run me!");
+	    }
+	};
+
+以上使用匿名類別的方式，實作介面內的抽象方法
+如果使用Lamda的方式來表達，可以簡化如下:
+Runnable runnbale = () -> System.out.println("run me!");
+
+使用Lambda來取代以往Functional Interface的使用方式，可以大大的縮短程式碼
+在編譯的過程中，也可以避免掉產生新的.class檔案出來
+執行的時候，也不會再重新new出一個物件實體，而是直接將Lambda的body程式碼存放在記憶體
+直接以類似call function的方式去執行，大大的提升程式的執行效能。
+
+
+而且由於少了new這個指令，使用Lambda實作出來的方法，並不會另外實體化出物件
+看下面範例:
+Runnable r1 = () -> System.out.println("r1: " + this.getClass());
+	
+Runnable r2 = new Runnable(){
+    public void run(){
+	System.out.println("r2: " + this.getClass());
+    }
+};
+ 
+new Thread(r1).start();
+new Thread(r2).start();
+
+雖然兩個執行緒都是呼叫this.getClass()，但print出來的結果卻不一樣。
+而且可以知道使用Lambda的r1，this所指的物件就是此行Lambda語法所在的物件
+並不會像沒使用Lambda的r2一樣變成一個匿名類別的物件。
+
+
+Lamda特殊精簡語法結構
+input -> body結構，Lambda在某些特定的場合下，還能夠寫出更短的語法
+只要寫方法名稱便可，範例:exp.java
+必須要明確指定方法名稱是在哪個類別或是哪個物件之下，而且最後一個「.」要改成「::」
