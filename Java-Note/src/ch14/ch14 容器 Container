@@ -1,0 +1,132 @@
+Java 對管理資料用的容器（Container）型態
+在語法上提供直接支援的只有陣列，其餘則是以程式庫的形式存在
+
+陣列型態:
+Java 目前唯一在語法上提供支援的是陣列
+如果你需要容量固定且有序的容器，就可以使用陣列
+基本上與陣列有關的屬性只有 length
+想對陣列做任何其他操作，可以使用 java.util.Arrays 提供的 static 方法。
+
+
+List型態:
+如果需要有序具索引特性的容器，且需要比陣列擁有更多功能，可以使用 List
+此型態定義在 java.util 套件中。
+
+若已確定元素數量，可以使用 java.util.ArraysasList 來建立 List 實作物件
+例:
+List<Integer> numbers = Arrays.asList(1, 2, 3);
+
+若未確定收集的元素，可以先行建立List的實作物件
+可以視需求採用適當的資料結構實作物件
+例如內部實作採陣列的ArrayList，或採鏈結的LinkList
+
+例如以下範例使用ArrayList:
+List<Integer> numbers = Arrays.asList(1, 2, 3);
+List<Integer> collector = new ArrayList<>();
+collector.add(10);
+collector.addAll(numbers);
+collector.size(); // 4
+
+
+Set型態:
+Set 型態是無序群集（Collection），管理的元素不會重複。
+一樣可以依照需求選用適當的資料結構實作物件
+例如基於雜湊（Hash）的 HashSet，或者是基於紅黑樹實作的 TreeSet
+範例: Main_Set.java
+
+
+Map型態:
+鍵值對應的物件，在 Java 中可使用 Map 型態
+依照需求選用適當的資料結構實作物件，ex:HashMap、TreeMap等
+範例: Main_Map.java
+
+好的，以上是有關容器的大觀
+以下我們往較細節的部分開始談
+
+1. ArrayList
+ArrayList簡單來說就是一個沒有長度限制的陣列(Array)
+正如我們前面所提到的，在宣告Array時
+需要在一開始就指定Array的長度，但往往我們可能無法提前得知確切的數量
+或者會遇到需要增加的資料內容，因此我們就可以使用ArrayList
+範例: ArrayList_test.java，實作一些常用到的方法
+
+
+2. Set(TreeSet與 HashSet)
+Set前面有講解過，其所包含及管理的內容不會重複
+範例: TreeSet_test.java
+
+可以發現到其操作方式與ArrayList大致相同
+而在最後print的部分，Set容器在印出資料時必須先轉換為iterator型態
+才能夠逐一列出值，而列出值的順序顯然與加入的順序有所不同
+也是因為在轉換為Iterator型態列出結果時，Iterator會將內容值排序的緣故。
+
+HashSet與TreeSet的用法相同，不同之處在於TreeSet會排序，而HashSet不會
+因此存取速度，HashSet會必TreeSet來的快，然後因為Iteratir的原因
+HashSet印出後，依然會是排序過的資料呈現。
+
+
+3. Map(TreeMap與 HashMap)
+Map的物件型態由一個Key搭配一個Value所組成，
+key和value的資料型態都可以指定，常用於我們會以某一鍵值來識別某一筆唯一的資料時
+範例: TreeMap_test.java
+
+同理，HashMap和TreeMap的概念是一樣的，同樣以key和value來組成
+不同處在於TreeMap會依照key值排序，但HashMap不會
+也因此HashMap的存取速度會比TreeMap來得快。
+
+
+最後整理:
+
+List:
+次序是 List最重要的特點：它保證維護元素特定的順序。
+List 為 Collection 添加了許多方法，使得能夠向 List 中間插入與移除元素(這只推薦 LinkedList 使用)。
+一個 List可以生成 ListIterator，使用它可以從兩個方向遍歷 List，也可以從 List 中間插入和移除元素。
+
+ArrayList:
+由陣列實現的List。允許對元素進行快速隨機訪問，但是向 List 中間插入與移除元素的速度很慢。
+ListIterator只應該用來由後向前遍歷 ArrayList，而不是用來插入和移除元素。
+因為那比 LinkedList 開銷要大很多。
+
+LinkedList:
+對順序訪問進行了優化，向 List 中間插入與刪除的開銷並不大。
+隨機訪問則相對較慢(使用 ArrayList 代替)。
+還具有下列方法：addFirst(), addLast(), getFirst(), getLast(), removeFirst() 和 removeLast()
+這些方法(沒有在任何介面或基類中定義過)使得 LinkedList 可以當作堆棧、隊列和雙向隊列使用。
+
+
+Set:
+存入 Set 的每個元素都必須是唯一的，因為 Set 不保存重復元素。
+加入 Set 的元素必須定義 equals() 方法以確保物件的唯一性。
+Set 與 Collection 有完全一樣的介面。Set 介面不保證維護元素的次序。
+
+HashSet:
+為快速查找設計的 Set。存入 HashSet 的物件必須定義 hashCode()。
+
+TreeSet:
+保存次序的 Set，底層為樹結構。使用它可以從 Set 中提取有序的序列。
+
+LinkedHashSet:
+具有 HashSet 的查詢速度，且內部使用鏈表維護元素的順序(插入的次序)。於是在使用迭代器遍歷 Set 時，結果會按元素插入的次序顯示。
+
+
+HashMap:
+Map 基於散列表的實現。插入和查詢“鍵值對”的開銷是固定的。
+可以通過構造器設置容量 capacity 和負載因子 load factor，以調整容器的性能。
+HashMap 就是使用物件的 hashCode() 進行快速查詢的。此方法能夠顯著提高性能。
+
+
+LinkedHashMap:
+類似於 HashMap，但是迭代遍歷它時，取得“鍵值對”的順序是其插入次序，或者是最近最少使用(LRU)的次序。
+只比 HashMap 慢一點。而在迭代訪問時發而更快，因為它使用鏈表維護內部次序。
+
+TreeMap:
+基於紅黑樹數據結構的實現。查看“鍵”或“鍵值對”時，它們會被排序(次序由 Comparabel 或 Comparator 決定)。
+TreeMap 的特點在 於，你得到的結果是經過排序的。TreeMap 是唯一的帶有 subMap() 方法的 Map，它可以返回一個子樹。
+
+WeakHashMao:
+弱鍵(weak key)Map，Map 中使用的物件也被允許釋放: 這是為解決特殊問題設計的。
+如果沒有 map 之外的引用指向某個“鍵”，則此“鍵”可以被垃圾收集器回收。
+
+IdentifyHashMap:
+使用 == 代替 equals() 對“鍵”作比較的 hash map。專為解決特殊問題而設計。
+
